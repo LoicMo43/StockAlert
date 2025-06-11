@@ -3,28 +3,41 @@
 namespace StockAlert\Api\Resource;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use Propel\Runtime\Map\TableMap;
 use StockAlert\Model\Map\RestockingAlertTableMap;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\Ignore;
 use Thelia\Api\Bridge\Propel\Attribute\Relation;
-use Thelia\Api\Bridge\Propel\State\PropelCollectionProvider;
-use Thelia\Api\Bridge\Propel\State\PropelItemProvider;
 use Thelia\Api\Resource\ProductSaleElements;
+use Thelia\Api\Resource\PropelResourceInterface;
+use Thelia\Api\Resource\PropelResourceTrait;
 
 #[ApiResource(
     operations: [
         new Get(
-            uriTemplate: '/admin/stock-alerts/{id}',
-            name: 'api_stock_alert_get_id',
-            provider: PropelItemProvider::class
+            uriTemplate: '/admin/stock-alert/{id}',
+            name: 'api_stock_alert_get_id'
         ),
         new GetCollection(
             uriTemplate: '/admin/stock-alerts',
-            name: 'api_stock_alert_get_collection',
-            provider: PropelCollectionProvider::class
+            name: 'api_stock_alert_get_collection'
+        ),
+        new Post(
+            uriTemplate: '/admin/stock-alert',
+            name: 'api_stock_alert_post_id'
+        ),
+        new Delete(
+            uriTemplate: '/admin/stock-alert/{id}',
+            name: 'api_stock_alert_delete_id'
+        ),
+        new Patch(
+            uriTemplate: '/admin/stock-alert/{id}',
+            name: 'api_stock_alert_patch_id'
         )
     ],
     normalizationContext: ['groups' => [self::GROUP_ADMIN_READ]],
@@ -33,21 +46,33 @@ use Thelia\Api\Resource\ProductSaleElements;
 #[ApiResource(
     operations: [
         new Get(
-            uriTemplate: '/front/stock-alerts/{id}',
-            name: 'api_stock_alert_get_id_front',
-            provider: PropelItemProvider::class
+            uriTemplate: '/front/stock-alert/{id}',
+            name: 'api_stock_alert_get_id_front'
         ),
         new GetCollection(
             uriTemplate: '/front/stock-alerts',
-            name: 'api_stock_alert_get_collection_front',
-            provider: PropelCollectionProvider::class
+            name: 'api_stock_alert_get_collection_front'
+        ),
+        new Post(
+            uriTemplate: '/front/stock-alert',
+            name: 'api_stock_alert_post_id_front'
+        ),
+        new Delete(
+            uriTemplate: '/front/stock-alert/{id}',
+            name: 'api_stock_alert_delete_id_front'
+        ),
+        new Patch(
+            uriTemplate: '/front/stock-alert/{id}',
+            name: 'api_stock_alert_patch_id_front'
         )
     ],
     normalizationContext: ['groups' => [self::GROUP_FRONT_READ]],
     denormalizationContext: ['groups' => [self::GROUP_FRONT_WRITE]]
 )]
-class RestockingAlert
+class RestockingAlert implements PropelResourceInterface
 {
+    use PropelResourceTrait;
+
     public const GROUP_ADMIN_READ = 'admin:stock_alert:read';
     public const GROUP_ADMIN_WRITE = 'admin:stock_alert:write';
     public const GROUP_FRONT_READ = 'front:stock_alert:read';
@@ -62,20 +87,20 @@ class RestockingAlert
     /**
      * @var ProductSaleElements|null
      */
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ, self::GROUP_FRONT_WRITE])]
     #[Relation(targetResource: ProductSaleElements::class)]
     public ?ProductSaleElements $productSaleElements = null;
 
     /**
      * @var string|null
      */
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ, self::GROUP_FRONT_WRITE])]
     public ?string $email = null;
 
     /**
      * @var string|null
      */
-    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ])]
+    #[Groups([self::GROUP_ADMIN_READ, self::GROUP_ADMIN_WRITE, self::GROUP_FRONT_READ, self::GROUP_FRONT_WRITE])]
     public ?string $locale = null;
 
     /**

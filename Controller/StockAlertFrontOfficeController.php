@@ -12,16 +12,12 @@
 
 namespace StockAlert\Controller;
 
-use StockAlert\Event\StockAlertEvent;
-use StockAlert\Event\StockAlertEvents;
 use StockAlert\Form\StockAlertSubscribe;
-use StockAlert\StockAlert;
+use StockAlert\Service\StockAlertSubscriptionService;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\HttpFoundation\Response;
-use Thelia\Core\Translation\Translator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -29,18 +25,17 @@ use Symfony\Component\Routing\Annotation\Route;
 class StockAlertFrontOfficeController extends BaseFrontController
 {
     /**
-     * @param EventDispatcherInterface $eventDispatcher
+     * @param StockAlertSubscriptionService $subscriptionService
      * @param RequestStack $requestStack
-     * @return RedirectResponse|Response
+     * @return Response|RedirectResponse
      * @throws \JsonException
      */
     #[Route(path: "/subscribe", name: "_subscribe", methods: ["POST"])]
     public function subscribe(
-        EventDispatcherInterface $eventDispatcher,
+        StockAlertSubscriptionService $subscriptionService,
         RequestStack $requestStack
     ): Response|RedirectResponse
     {
-        $success = true;
         $request = $requestStack->getCurrentRequest();
 
         $form = $this->createForm(
@@ -50,26 +45,19 @@ class StockAlertFrontOfficeController extends BaseFrontController
             ['csrf_protection' => false]
         );
 
+        $data = [];
+        $success = true;
+
         try {
             $data = $this->validateForm($form)->getData();
 
-            $event = new StockAlertEvent(
+            $result = $subscriptionService->subscribe(
                 $data['product_sale_elements_id'],
                 $data['email'],
-                $data['newsletter'] ?? false,
-                $request?->getSession()->getLang()->getLocale()
+                $data['newsletter'] ?? false
             );
-
-            $eventDispatcher->dispatch(
-                $event,
-                StockAlertEvents::STOCK_ALERT_SUBSCRIBE
-            );
-
-            $message = Translator::getInstance()->trans(
-                "C’est noté ! Vous recevrez un e-mail dès que le produit sera de nouveau en stock.",
-                [],
-                StockAlert::MESSAGE_DOMAIN
-            );
+            $success = $result['success'];
+            $message = $result['message'];
         } catch (\Exception $e) {
             $success = false;
             $message = $e->getMessage();
